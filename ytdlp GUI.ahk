@@ -15,18 +15,20 @@ if not DirExist("bin") {
 
 yt := Gui()
 yt.Opt("-DPIScale") yt.MarginX := 0 yt.MarginY := 5 yt.OnEvent("Close", (*) => ExitApp())
-yt.AddText "w48 h24 ", "yt-dlp "
+yt.AddGroupBox("w1100 h100")
+yt.AddText("w48 h24 xp5 yp10", "yt-dlp ")
 ;搜索框的展示与数据获取
 weburl := yt.AddEdit("yp w780 h24 vedit1", "https://www.bilibili.com/video/BV1KnteevEXT?spm_id_from=333.788.videopod.sections&vd_source=8e1125d27ce0192b5bca860631f1ba57")
 Down := yt.AddButton("Default w80 h24 yp hp", "下载")
 toggle := yt.AddCheckbox("w155 h24 yp -Wrap", "禁用快捷键:Ctrl+B")
 
 ;还差一个change事件没有写
-yt.AddText("xs w80", "视频格式：")
+yt.AddText("xs yp30 w80", "视频格式：")
 outtype := yt.AddComboBox("yp w60", ["mp4", "webm", "avi", "flv", "mkv", "mov"])
 yt.AddText("w80 yp -Wrap ", "装载cookies")
 yt.AddText("w70  yp Border", "浏览位置").OnEvent("Click", choose_cookies)
 cookies := yt.AddEdit("w500  yp", A_WorkingDir . "bin\cookies.txt")
+cookies_check := yt.AddCheckbox("yp", "加载cookie")
 download_cookies := yt.AddText("w100 yp border", "查看cookies获取方法")
 yt.AddGroupBox("w1400 h480 xs", "从源码提取视频地址")
 ; yt.AddButton("Default w80 xp5 yp20","ok")
@@ -54,7 +56,10 @@ yt.Show("w1440 h800")
 Down.OnEvent("Click", Downlo)
 outtype.Text := "mp4" outtype.OnEvent("Change", (*) => MsgBox("ok"))
 Downlo(*) {
-    temp := "yt-dlp " temp .= weburl.Text
+    temp := "yt-dlp "
+    if cookies_check
+        temp.="--cookies cookies.txt "
+    temp .= weburl.Text
     ; MsgBox toggle.Value
     ; Run("cmd /c timeout /t 2", A_WorkingDir . "/Download") ;两秒后cmd结束的示例。
     Run("cmd /c .\yt-dlp.exe " . "`"" . weburl.Text . "`" " . "-P " . "`"../Download`"", A_WorkingDir . "/bin")
