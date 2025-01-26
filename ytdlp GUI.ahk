@@ -27,7 +27,7 @@ yt.AddText("xs yp30 w80", "视频格式：")
 outtype := yt.AddComboBox("yp w60", ["mp4", "webm", "avi", "flv", "mkv", "mov"])
 yt.AddText("w80 yp -Wrap ", "装载cookies")
 yt.AddText("w70  yp Border", "浏览位置").OnEvent("Click", choose_cookies)
-cookies := yt.AddEdit("w500  yp", A_WorkingDir . "bin\cookies.txt")
+cookies := yt.AddEdit("w500  yp", A_WorkingDir . "\bin\cookies.txt")
 cookies_check := yt.AddCheckbox("yp", "加载cookie")
 download_cookies := yt.AddText("w100 yp border", "查看cookies获取方法")
 yt.AddGroupBox("w1400 h480 xs", "从源码提取视频地址")
@@ -57,14 +57,20 @@ Down.OnEvent("Click", Downlo)
 outtype.Text := "mp4" outtype.OnEvent("Change", (*) => MsgBox("ok"))
 Downlo(*) {
     temp := "yt-dlp "
-    if cookies_check
-        temp.="--cookies cookies.txt "
+    if cookies_check.Value
+        temp .= "--cookies cookies.txt "
     temp .= weburl.Text
     ; MsgBox toggle.Value
     ; Run("cmd /c timeout /t 2", A_WorkingDir . "/Download") ;两秒后cmd结束的示例。
     Run("cmd /c .\yt-dlp.exe " . "`"" . weburl.Text . "`" " . "-P " . "`"../Download`"", A_WorkingDir . "/bin")
 }
+cookies_check.OnEvent("Click", cookies_check_fun)
+cookies_check_fun(*) {
+    if FileExist(cookies.Text) and cookies_check.Value = 1 {
+        ; MsgBox "ok"
 
+    }
+}
 crawlerfun(*) {
     global WinHttp := ComObject("WinHttp.WinHttpRequest.5.1")
     global XmlHttp := ComObject("Msxml2.XMLHTTP.6.0")
@@ -83,7 +89,7 @@ download_extension(*) {
 choose_cookies(*) {
     cookies.Text := FileSelect()
     ;这里记得写一个移动文件事件。 目前写完还没开始测试
-    if cookies.Text != ""
+    if (cookies.Text != "") and InStr(cookies.Text,"cookies.txt")
         FileCopy(cookies.Text, A_WorkingDir . "/bin")
 }
 waitforclip(datatype) {
