@@ -6,106 +6,32 @@ if not DirExist("Download")
     DirCreate("Download")
 if not DirExist("bin") {
     DirCreate("bin")
+    ; 下述列表是打包exe需要的内容，并不运行与脚本之中。
     FileInstall("bin/yt-dlp.exe", "bin/yt-dlp.exe")
     FileInstall("bin/ffmpeg.exe", "bin/ffmpeg.exe")
     FileInstall("bin/ffprobe.exe", "bin/ffprobe.exe")
 }
 
-; **********************Gui zone*******************************************
-
 yt := Gui()
 yt.Opt("-DPIScale") yt.MarginX := 0 yt.MarginY := 5 yt.OnEvent("Close", (*) => ExitApp())
+yt.OnEvent("Escape", (*) => ExitApp())
 yt.AddGroupBox("w1100 h100")
-yt.AddText("w48 h24 xp5 yp10", "yt-dlp ")
+yt.AddText("w48 h24 xp5 yp10", "视频网址")
 ;搜索框的展示与数据获取
-weburl := yt.AddEdit("yp w780 h24 vedit1", "https://www.bilibili.com/video/BV1KnteevEXT?spm_id_from=333.788.videopod.sections&vd_source=8e1125d27ce0192b5bca860631f1ba57")
-Down := yt.AddButton("Default w80 h24 yp hp", "下载")
-toggle := yt.AddCheckbox("w155 h24 yp -Wrap", "禁用快捷键:Ctrl+B")
-
-;还差一个change事件没有写
-yt.AddText("xs yp30 w80", "视频格式：")
-outtype := yt.AddComboBox("yp w60", ["mp4", "webm", "avi", "flv", "mkv", "mov"])
-yt.AddText("w80 yp -Wrap ", "装载cookies")
-yt.AddText("w70  yp Border", "浏览位置").OnEvent("Click", choose_cookies)
-cookies := yt.AddEdit("w500  yp", A_WorkingDir . "\bin\cookies.txt")
-cookies_check := yt.AddCheckbox("yp", "加载cookie")
-download_cookies := yt.AddText("w100 yp border", "查看cookies获取方法")
-yt.AddGroupBox("w1400 h480 xs", "从源码提取视频地址")
-; yt.AddButton("Default w80 xp5 yp20","ok")
-yt.AddText("w40 xp5 yp20 h24 ", "url-:")
-crawler_url := yt.AddEdit("yp w780 hp", "https://www.bilibili.com/video/BV1KnteevEXT?spm_id_from=333.788.videopod.sections&vd_source=8e1125d27ce0192b5bca860631f1ba57")
-crawler := yt.AddButton("yp w80 Default hp", "源码解析")
-crawler.OnEvent("Click", crawlerfun)
-crawler_key := yt.AddCheckbox("yp w150 hp -Wrap", "禁用快捷键:Ctrl+F")
-crawler_key.Value := 1
-crawler_console := yt.AddEdit("xp-915 yp30 w1040 h400 ")
-yt.AddGroupBox("w1060 h64 xs")
-yt.AddText("xp5 yp10 w60 h48 ", "使用命令行操作：")
-command_edit := yt.AddEdit("w800 h48 yp ", "参考说明文档：`nhttps://github.com/yt-dlp/yt-dlp")
-command_button := yt.AddButton("Default w80 h48 yp", "执行")
-yt.AddText("yp w90", "  使用模板")
-;这里最好做成一个复选框，既有分辨率又有其他模式的复合模板
-yt.AddComboBox("w90 xp", ["4K视频", "2K视频", "1080P", "720P"])
-yt.AddButton("Default w120 xs", "下载必要组件").OnEvent("Click", download_extension)
-yt.AddButton("Default w100 yp", "yt-dlp更新").OnEvent("Click", update)
-yt.Title := "视频下载器"
-toggle.Value := 0
-yt.Show("w1440 h800")
-
-; **********************Gui event********************************************
-Down.OnEvent("Click", Downlo)
-outtype.Text := "mp4" outtype.OnEvent("Change", (*) => MsgBox("ok"))
+; edit1
+yt.AddEdit("yp w780 h24 vedit1", "https://www.bilibili.com/video/BV1KnteevEXT?spm_id_from=333.788.videopod.sections&vd_source=8e1125d27ce0192b5bca860631f1ba57")
+yt.AddButton("Default w80 h24 yp hp", "下载").OnEvent("Click", Downlo)
 Downlo(*) {
     temp := "yt-dlp "
-    if cookies_check.Value
-        temp .= "--cookies cookies.txt "
-    temp .= weburl.Text
+    temp .= ControlGetText("edit1", "视频下载器")
     ; MsgBox toggle.Value
     ; Run("cmd /c timeout /t 2", A_WorkingDir . "/Download") ;两秒后cmd结束的示例。
-    Run("cmd /c .\yt-dlp.exe --cookies-from-browser firefox `""  weburl.Text . "`" -P `"../Download`"", A_WorkingDir . "/bin")
+    Run("cmd /c .\yt-dlp.exe --cookies-from-browser firefox `"" ControlGetText("edit1", "视频下载器") . "`" -P `"../Download`"", A_WorkingDir . "/bin")
 }
-cookies_check.OnEvent("Click", cookies_check_fun)
-cookies_check_fun(*) {
-    if FileExist(cookies.Text) and cookies_check.Value = 1 {
-        ; MsgBox "ok"
+yt.AddCheckbox("w155 h24 yp -Wrap Checked0", "禁用快捷键:Ctrl+B") ;button3
 
-    }
-}
-crawlerfun(*) {
-    global WinHttp := ComObject("WinHttp.WinHttpRequest.5.1")
-    global XmlHttp := ComObject("Msxml2.XMLHTTP.6.0")
-    ;爬虫脚本写法，建议做成相关的lib来使用
-}
-update(*) {
-    Run("cmd  /k .\yt-dlp.exe -U", A_WorkingDir . "/bin")
-    ; Run("cmd .\yt-dlp.exe yt-dlp -U")
-    ; Run("cmd cd " . "`"" . "bin" . "`"")
-}
-download_extension(*) {
-    ;添加下载网址来进行下载，如果可能可以把打开浏览器变为直接打开下载地址进行下载，
-    ; 但是会丢失一定的可定制性以及稳定性
-    MsgBox("请将下载文件放入程序的/bin文件夹中`n所需文件有 ffmpeg.exe和ffprobe.exe`n如果使用版本为完整版，必要组件已完成部署。")
-    Run("https://www.ffmpeg.org/download.html")
-}
-choose_cookies(*) {
-    cookies.Text := FileSelect()
-    ;这里记得写一个移动文件事件。 目前写完还没开始测试
-    if (cookies.Text != "") and InStr(cookies.Text,"cookies.txt")
-        FileCopy(cookies.Text, A_WorkingDir . "/bin")
-}
-waitforclip(datatype) {
-    if InStr(A_Clipboard, "https://") || InStr(A_Clipboard, "http://")
-        weburl.Text := A_Clipboard
-    else return
-}
-command_button.OnEvent("Click", command_func)
-command_func(*) {
-    ; MsgBox "ok"
-    temp := command_edit.Text
-    ; MsgBox temp
-    Run(temp)
-}
-download_cookies.OnEvent("click", cookies_func)
+;还差一个change事件没有写
+yt.AddText("xs yp30 w100 border", "查看cookies获取方法").OnEvent("click", cookies_func)
 cookies_func(*) {
     MsgBox("打开浏览器插件商店，搜索插件：`n"
         . "`"Get cookies.txt LOCALLY`"" .
@@ -113,14 +39,46 @@ cookies_func(*) {
     A_Clipboard := "https://github.com/kairi003/Get-cookies.txt-LOCALLY/"
     MsgBox ("网址已复制到剪切板！`n在浏览器中粘贴打开即可")
 }
-OnClipboardChange waitforclip
 
-; #HotIf (toggle.Value=0)
-#HotIf toggle.Value = 0
+yt.AddGroupBox("w1060 h64 xs")
+yt.AddText("xp5 yp10 w60 h48 0x200 ", "使用命令行操作：")
+yt.AddEdit("w800 h48 yp ", "参考说明文档：`nhttps://github.com/yt-dlp/yt-dlp") ;edit3
+yt.AddButton("Default w80 h48 yp", "执行").OnEvent("Click", command_func)
+command_func(*) {
+    ; MsgBox "ok"
+    temp := ControlGetText("edit3","视频下载器")
+    ; MsgBox temp
+    Run(temp)
+}
+yt.AddText("yp w90", "  使用模板")
+;这里最好做成一个复选框，既有分辨率又有其他模式的复合模板
+yt.AddComboBox("w90 xp", ["4K视频", "2K视频", "1080P", "720P"])
+yt.AddButton("Default w120 xs", "下载必要组件").OnEvent("Click", download_extension)
+download_extension(*) {
+    ;添加下载网址来进行下载，如果可能可以把打开浏览器变为直接打开下载地址进行下载，
+    ; 但是会丢失一定的可定制性以及稳定性
+    MsgBox("请将下载文件放入程序的/bin文件夹中`n所需文件有 ffmpeg.exe和ffprobe.exe`n如果使用版本为完整版，必要组件已完成部署。")
+    Run("https://www.ffmpeg.org/download.html")
+}
+yt.AddButton("Default w100 yp", "yt-dlp更新").OnEvent("Click", update)
+update(*) {
+    Run("cmd  /k .\yt-dlp.exe -U", A_WorkingDir . "/bin")
+    ; Run("cmd .\yt-dlp.exe yt-dlp -U")
+    ; Run("cmd cd " . "`"" . "bin" . "`"")
+}
+yt.Title := "视频下载器"
+yt.Show("w" A_ScreenWidth * 0.6 "h" A_ScreenHeight * 0.6)
+
+OnClipboardChange waitforclip
+waitforclip(datatype) {
+    if InStr(A_Clipboard, "https://") || InStr(A_Clipboard, "http://")
+        ControlSetText(A_Clipboard, "edit1", "视频下载器")
+    else return
+}
+
+
+#HotIf ControlGetChecked("button3", "视频下载器") = 0
 ~^b:: Downlo()
-#HotIf
-#HotIf crawler.Value = 0 and WinActive("视频下载器")
-~^f:: crawlerfun()
 #HotIf
 
 ; DllCall ___ LoadLibrary、wininet\InternetOpen、wininet\InternetOpenUrl、wininet\InternetQueryDataAvailable、
