@@ -15,6 +15,7 @@ if not DirExist("bin") {
 yt := Gui()
 yt.Opt("-DPIScale") yt.MarginX := 0 yt.MarginY := 5 yt.OnEvent("Close", (*) => ExitApp())
 yt.OnEvent("Escape", (*) => ExitApp())
+yt.Title := "视频下载器"
 yt.AddGroupBox("w1100 h100")
 yt.AddText("w48 h24 xp5 yp10", "视频网址")
 ;搜索框的展示与数据获取
@@ -43,16 +44,14 @@ cookies_func(*) {
 yt.AddGroupBox("w1060 h64 xs")
 yt.AddText("xp5 yp10 w60 h48 0x200 ", "使用命令行操作：")
 yt.AddEdit("w800 h48 yp ", "参考说明文档：`nhttps://github.com/yt-dlp/yt-dlp") ;edit3
-yt.AddButton("Default w80 h48 yp", "执行").OnEvent("Click", command_func)
+yt.AddButton("Default w60 h48 yp", "执行").OnEvent("Click", command_func)
 command_func(*) {
     ; MsgBox "ok"
     temp := ControlGetText("edit3","视频下载器")
     ; MsgBox temp
     Run(temp)
 }
-yt.AddText("yp w90", "  使用模板")
-;这里最好做成一个复选框，既有分辨率又有其他模式的复合模板
-yt.AddComboBox("w90 xp", ["4K视频", "2K视频", "1080P", "720P"])
+
 yt.AddButton("Default w120 xs", "下载必要组件").OnEvent("Click", download_extension)
 download_extension(*) {
     ;添加下载网址来进行下载，如果可能可以把打开浏览器变为直接打开下载地址进行下载，
@@ -60,13 +59,13 @@ download_extension(*) {
     MsgBox("请将下载文件放入程序的/bin文件夹中`n所需文件有 ffmpeg.exe和ffprobe.exe`n如果使用版本为完整版，必要组件已完成部署。")
     Run("https://www.ffmpeg.org/download.html")
 }
+
 yt.AddButton("Default w100 yp", "yt-dlp更新").OnEvent("Click", update)
 update(*) {
     Run("cmd  /k .\yt-dlp.exe -U", A_WorkingDir . "/bin")
     ; Run("cmd .\yt-dlp.exe yt-dlp -U")
     ; Run("cmd cd " . "`"" . "bin" . "`"")
 }
-yt.Title := "视频下载器"
 yt.Show("w" A_ScreenWidth * 0.6 "h" A_ScreenHeight * 0.6)
 
 OnClipboardChange waitforclip
