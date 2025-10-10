@@ -62,7 +62,7 @@ Downlo(*) {
     temp .= weburl.Text
     ; MsgBox toggle.Value
     ; Run("cmd /c timeout /t 2", A_WorkingDir . "/Download") ;两秒后cmd结束的示例。
-    Run("cmd /c .\yt-dlp.exe " . "`"" . weburl.Text . "`" " . "-P " . "`"../Download`"", A_WorkingDir . "/bin")
+    Run("cmd /c .\yt-dlp.exe --cookies-from-browser firefox `""  weburl.Text . "`" -P `"../Download`"", A_WorkingDir . "/bin")
 }
 cookies_check.OnEvent("Click", cookies_check_fun)
 cookies_check_fun(*) {
@@ -74,6 +74,7 @@ cookies_check_fun(*) {
 crawlerfun(*) {
     global WinHttp := ComObject("WinHttp.WinHttpRequest.5.1")
     global XmlHttp := ComObject("Msxml2.XMLHTTP.6.0")
+    ;爬虫脚本写法，建议做成相关的lib来使用
 }
 update(*) {
     Run("cmd  /k .\yt-dlp.exe -U", A_WorkingDir . "/bin")
